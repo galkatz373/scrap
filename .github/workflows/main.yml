@@ -17,6 +17,8 @@ jobs:
           cache: 'yarn'
       - name: install dependencies
         run: yarn install
+      - name: install playwright
+        run: npx playwright install-deps chromium
       - name: run automation
         run: yarn ci
       - name: add changes
