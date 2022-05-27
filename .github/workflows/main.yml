@@ -1,0 +1,27 @@
+name: schedule
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 */15 * *'
+
+jobs:
+  Run-Schedule:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v2
+      - name: setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'yarn'
+      - name: install dependencies
+        run: yarn install
+      - name: run automation
+        run: yarn ci
+      - name: add changes
+        run: git add .
+      - name: commit changes
+        run: git commit -m "Automated commit by schedule"
+      - name: push changes
+        run: git push origin master -f
