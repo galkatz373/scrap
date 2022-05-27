@@ -66,7 +66,7 @@ const checkDiff = (oldData: Scrap[], newData: Scrap[]) => {
     const popularityNode = await row.$('.titleColumn .velocity');
     const popularity = await popularityNode.textContent();
 
-    if (imdbRatingNumber > 7.7) {
+    if (imdbRatingNumber > 7.6) {
       dataArr.push({
         popularity,
         title,
