@@ -47,9 +47,10 @@ const sendEmail = async (data: Scrap[]) => {
     },
   });
   await transporter.sendMail({
-    from: '"Automated Scraper Show <automated@scraper.com>"',
+    from: '"Automated Scraper Show" <automated@scraper.com>',
     to: 'galkatz373@gmail.com',
     subject: 'Automated Scraper Show IMDB',
+    text: 'something',
     html: '<b>test</b>',
   });
 };
@@ -86,7 +87,7 @@ const sendEmail = async (data: Scrap[]) => {
     const popularityNode = await row.$('.titleColumn .velocity');
     const popularity = await popularityNode.textContent();
 
-    if (imdbRatingNumber > 9.2) {
+    if (imdbRatingNumber > 7.6) {
       dataArr.push({
         popularity,
         title,
