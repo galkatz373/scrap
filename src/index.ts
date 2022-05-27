@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import { writeFileSync, readFileSync } from 'fs-extra';
+import { createTestAccount, createTransport } from 'nodemailer';
 
 type Scrap = {
   imdbRating: number;
@@ -32,6 +33,25 @@ const checkDiff = (oldData: Scrap[], newData: Scrap[]) => {
   const diff = newDataName.filter((title) => !oldDataName.includes(title));
   const newDataFiltered = newData.filter(({ title }) => diff.includes(title));
   return newDataFiltered;
+};
+
+const sendEmail = async (data: Scrap[]) => {
+  const testAccount = await createTestAccount();
+  const transporter = createTransport({
+    host: 'smtp.ethereal.email',
+    port: 587,
+    secure: false, // true for 465, false for other ports
+    auth: {
+      user: testAccount.user, // generated ethereal user
+      pass: testAccount.pass, // generated ethereal password
+    },
+  });
+  await transporter.sendMail({
+    from: '"Automated Scraper Show <automated@scraper.com>"',
+    to: 'galkatz373@gmail.com',
+    subject: 'Automated Scraper Show IMDB',
+    html: '<b>test</b>',
+  });
 };
 
 (async () => {
@@ -114,5 +134,6 @@ const checkDiff = (oldData: Scrap[], newData: Scrap[]) => {
   }
   const result = checkDiff(oldData, dataArr);
   writeFileSync('./src/data.json', JSON.stringify([...result, ...oldData]));
+  await sendEmail(result);
   await browser.close();
 })();
