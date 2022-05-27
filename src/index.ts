@@ -1,4 +1,4 @@
-import { chromium } from '@playwright/test';
+import { chromium } from 'playwright';
 import { writeFileSync, readFileSync } from 'fs-extra';
 
 type Scrap = {
@@ -66,7 +66,7 @@ const checkDiff = (oldData: Scrap[], newData: Scrap[]) => {
     const popularityNode = await row.$('.titleColumn .velocity');
     const popularity = await popularityNode.textContent();
 
-    if (imdbRatingNumber > 9.2) {
+    if (imdbRatingNumber > 7.7) {
       dataArr.push({
         popularity,
         title,
