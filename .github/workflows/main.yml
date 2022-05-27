@@ -30,4 +30,4 @@ jobs:
       - name: commit changes
         run: git commit -m "Automated commit by schedule"
       - name: push changes
-        run: git push origin master -f
+        run: git push origin main -f
