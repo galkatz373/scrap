@@ -1,11 +1,10 @@
 import { chromium } from 'playwright';
 import { writeFileSync, readFileSync } from 'fs-extra';
-import { createTestAccount, createTransport } from 'nodemailer';
+import { createTransport } from 'nodemailer';
 
 type Scrap = {
   imdbRating: number;
   title: string;
-  year: string;
   image: string;
   url: string;
   popularity: string;
@@ -36,22 +35,61 @@ const checkDiff = (oldData: Scrap[], newData: Scrap[]) => {
 };
 
 const sendEmail = async (data: Scrap[]) => {
-  const testAccount = await createTestAccount();
   const transporter = createTransport({
-    host: 'smtp.ethereal.email',
+    host: 'smtp.gmail.com',
+    service: 'gmail',
     port: 587,
-    secure: false, // true for 465, false for other ports
+    secure: true,
     auth: {
-      user: testAccount.user, // generated ethereal user
-      pass: testAccount.pass, // generated ethereal password
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
     },
   });
   await transporter.sendMail({
-    from: '"Automated Scraper Show" <automated@scraper.com>',
-    to: 'galkatz373@gmail.com',
+    from: '"Automated Scrapper" <automated@scraper.com>',
+    to: process.env.EMAIL_TO,
     subject: 'Automated Scraper Show IMDB',
-    text: 'something',
-    html: '<b>test</b>',
+    html: `
+    <html>
+  <div class="title">NEW TV Shows Recommended For You:</div>
+  <table>
+    <thead style="text-align: left">
+      <th></th>
+      <th></th>
+      <th>Title</th>
+      <th>IMDB Rating</th>
+      <th>Age Rating</th>
+      <th>Duration</th>
+      <th>Genres</th>
+    </thead>
+
+    <tbody>
+      ${data.map(
+        ({ image, imdbRating, popularity, title, url, additional: { ageRating, duration, genres, yearsRunning } }) => `
+      <tr>
+        <td title="popularity" style="padding-right: 1rem">${popularity}</td>
+        <td style="padding-right: 1rem">
+          <img
+            width="45"
+            height="67"
+            style="margin-bottom: 10px"
+            src="${image}"
+          />
+        </td>
+        <td style="padding-right: 1rem">
+          <a href="https://www.imdb.com${url}"> ${title} (${yearsRunning})</a>
+        </td>
+        <td style="padding-right: 1rem">${imdbRating}</td>
+        <td style="padding-right: 1rem">${ageRating}</td>
+        <td style="padding-right: 1rem">${duration}</td>
+        <td style="padding-right: 1rem">${genres}</td>
+      </tr>
+      `
+      )}
+    </tbody>
+  </table>
+</html>
+    `,
   });
 };
 
@@ -59,7 +97,7 @@ const sendEmail = async (data: Scrap[]) => {
   const oldDataFile = readFileSync('./src/data.json', 'utf8');
   const oldData: Scrap[] = oldDataFile ? JSON.parse(oldDataFile) : [];
 
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({ headless: false });
   const page = await browser.newPage();
   await page.goto('https://www.imdb.com/chart/tvmeter/?ref_=nv_tvv_mptv');
 
@@ -71,9 +109,6 @@ const sendEmail = async (data: Scrap[]) => {
   for (const row of rowsHandler) {
     const titleNode = await row.$('.titleColumn a');
     const title = await titleNode.textContent();
-
-    const yearNode = await row.$('.titleColumn > .secondaryInfo');
-    const year = (await yearNode.textContent()).replace(/[{()}]/g, '');
 
     const imdbRatingNode = await row.$('.imdbRating');
     const imdbRatingNumber = Number(await imdbRatingNode.textContent());
@@ -93,7 +128,6 @@ const sendEmail = async (data: Scrap[]) => {
         title,
         image,
         imdbRating: imdbRatingNumber,
-        year,
         url,
       });
     }
@@ -134,7 +168,9 @@ const sendEmail = async (data: Scrap[]) => {
     };
   }
   const result = checkDiff(oldData, dataArr);
-  writeFileSync('./src/data.json', JSON.stringify([...result, ...oldData]));
-  await sendEmail(result);
+  if (result.length > 0) {
+    writeFileSync('./src/data.json', JSON.stringify([...result, ...oldData]));
+    await sendEmail(result);
+  }
   await browser.close();
 })();
