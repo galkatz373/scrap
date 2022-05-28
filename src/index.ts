@@ -38,8 +38,7 @@ const sendEmail = async (data: Scrap[]) => {
   const transporter = createTransport({
     host: 'smtp.gmail.com',
     service: 'gmail',
-    port: 587,
-    secure: true,
+    port: 465,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
@@ -97,7 +96,7 @@ const sendEmail = async (data: Scrap[]) => {
   const oldDataFile = readFileSync('./src/data.json', 'utf8');
   const oldData: Scrap[] = oldDataFile ? JSON.parse(oldDataFile) : [];
 
-  const browser = await chromium.launch({ headless: false });
+  const browser = await chromium.launch();
   const page = await browser.newPage();
   await page.goto('https://www.imdb.com/chart/tvmeter/?ref_=nv_tvv_mptv');
 
