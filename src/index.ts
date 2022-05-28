@@ -36,14 +36,12 @@ const checkDiff = (oldData: Scrap[], newData: Scrap[]) => {
 
 const sendEmail = async (data: Scrap[]) => {
   const transporter = createTransport({
-    host: 'smtp.gmail.com',
-    service: 'gmail',
+    host: 'smtp.ethereal.email',
     port: 587,
-    secure: true,
     auth: {
-      user: "ronsammy090@gmail.com",
-      pass: "yHU7e@6SyqLZ76kdQ",
-    },
+        user: 'itzel.toy34@ethereal.email',
+        pass: 'SywcpuergUxDdrKXsY'
+    }
   });
   await transporter.sendMail({
     from: '"Automated Scrapper" <automated@scraper.com>',
