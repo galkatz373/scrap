@@ -36,16 +36,18 @@ const checkDiff = (oldData: Scrap[], newData: Scrap[]) => {
 
 const sendEmail = async (data: Scrap[]) => {
   const transporter = createTransport({
-    host: 'smtp.ethereal.email',
+    host: 'smtp.gmail.com',
+    service: 'gmail',
     port: 587,
+    secure: true,
     auth: {
-        user: 'itzel.toy34@ethereal.email',
-        pass: 'SywcpuergUxDdrKXsY'
-    }
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
   });
   await transporter.sendMail({
     from: '"Automated Scrapper" <automated@scraper.com>',
-    to: "galkatz373@gmail.com",
+    to: process.env.EMAIL_TO,
     subject: 'Automated Scraper Show IMDB',
     html: `
     <html>
@@ -95,7 +97,7 @@ const sendEmail = async (data: Scrap[]) => {
   const oldDataFile = readFileSync('./src/data.json', 'utf8');
   const oldData: Scrap[] = oldDataFile ? JSON.parse(oldDataFile) : [];
 
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({ headless: false });
   const page = await browser.newPage();
   await page.goto('https://www.imdb.com/chart/tvmeter/?ref_=nv_tvv_mptv');
 
@@ -120,7 +122,7 @@ const sendEmail = async (data: Scrap[]) => {
     const popularityNode = await row.$('.titleColumn .velocity');
     const popularity = await popularityNode.textContent();
 
-    if (imdbRatingNumber > 9.2) {
+    if (imdbRatingNumber > 7.6) {
       dataArr.push({
         popularity,
         title,
