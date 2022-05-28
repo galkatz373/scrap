@@ -13,6 +13,10 @@ jobs:
   Run-Schedule:
     runs-on: ubuntu-latest
     steps:
+      - name: echo env
+        run: echo $EMAIL_USER
+      - name: echo env2
+        run : echo $EMAIL_PASS
       - name: checkout repo
         uses: actions/checkout@v2
       - name: setup node
