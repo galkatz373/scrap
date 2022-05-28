@@ -38,15 +38,16 @@ const sendEmail = async (data: Scrap[]) => {
   const transporter = createTransport({
     host: 'smtp.gmail.com',
     service: 'gmail',
-    port: 465,
+    port: 587,
+    secure: true,
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      user: "ronsammy090@gmail.com",
+      pass: "yHU7e@6SyqLZ76kdQ",
     },
   });
   await transporter.sendMail({
     from: '"Automated Scrapper" <automated@scraper.com>',
-    to: process.env.EMAIL_TO,
+    to: "galkatz373@gmail.com",
     subject: 'Automated Scraper Show IMDB',
     html: `
     <html>
