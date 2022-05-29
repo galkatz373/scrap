@@ -154,4 +154,5 @@ const sendEmail = async (data: Scrap[]) => {
     await sendEmail(result);
   }
   await browser.close();
+  process.exit(0);
 })();
