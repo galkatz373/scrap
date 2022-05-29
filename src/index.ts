@@ -1,44 +1,15 @@
 import { chromium } from 'playwright';
-import { writeFileSync, readFileSync } from 'fs-extra';
 import { createTransport } from 'nodemailer';
-
-type Scrap = {
-  imdbRating: number;
-  title: string;
-  image: string;
-  url: string;
-  popularity: string;
-  additional?: {
-    ageRating: string;
-    duration: string;
-    yearsRunning: string;
-    genres: string[];
-  };
-};
-
-enum Genre {
-  Drama = 'Drama',
-  Comedy = 'Comedy',
-  Crime = 'Crime',
-  Thriller = 'Thriller',
-  Mystery = 'Mystery',
-  SciFi = 'Sci-Fi',
-  Short = 'Short',
-}
-
-const checkDiff = (oldData: Scrap[], newData: Scrap[]) => {
-  const newDataName = newData.map(({ title }) => title);
-  const oldDataName = oldData.map(({ title }) => title);
-  const diff = newDataName.filter((title) => !oldDataName.includes(title));
-  const newDataFiltered = newData.filter(({ title }) => diff.includes(title));
-  return newDataFiltered;
-};
+import { Scrap } from './types';
+import { checkDiff, insertData } from './db-operations';
+require('dotenv').config();
 
 const sendEmail = async (data: Scrap[]) => {
   const transporter = createTransport({
     host: 'smtp.gmail.com',
     service: 'gmail',
-    port: 465,
+    port: 587,
+    secure: true,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
@@ -60,11 +31,19 @@ const sendEmail = async (data: Scrap[]) => {
       <th>Age Rating</th>
       <th>Duration</th>
       <th>Genres</th>
+      <th>Episodes</th>
     </thead>
 
     <tbody>
       ${data.map(
-        ({ image, imdbRating, popularity, title, url, additional: { ageRating, duration, genres, yearsRunning } }) => `
+        ({
+          image,
+          imdbRating,
+          popularity,
+          title,
+          url,
+          additional: { ageRating, duration, genres, episodes, yearsRunning },
+        }) => `
       <tr>
         <td title="popularity" style="padding-right: 1rem">${popularity}</td>
         <td style="padding-right: 1rem">
@@ -82,6 +61,7 @@ const sendEmail = async (data: Scrap[]) => {
         <td style="padding-right: 1rem">${ageRating}</td>
         <td style="padding-right: 1rem">${duration}</td>
         <td style="padding-right: 1rem">${genres}</td>
+        <td style="padding-right: 1rem">${episodes}</td>
       </tr>
       `
       )}
@@ -93,9 +73,6 @@ const sendEmail = async (data: Scrap[]) => {
 };
 
 (async () => {
-  const oldDataFile = readFileSync('./src/data.json', 'utf8');
-  const oldData: Scrap[] = oldDataFile ? JSON.parse(oldDataFile) : [];
-
   const browser = await chromium.launch();
   const page = await browser.newPage();
   await page.goto('https://www.imdb.com/chart/tvmeter/?ref_=nv_tvv_mptv');
@@ -121,7 +98,7 @@ const sendEmail = async (data: Scrap[]) => {
     const popularityNode = await row.$('.titleColumn .velocity');
     const popularity = await popularityNode.textContent();
 
-    if (imdbRatingNumber > 7.6) {
+    if (imdbRatingNumber > 9.3) {
       dataArr.push({
         popularity,
         title,
@@ -141,6 +118,10 @@ const sendEmail = async (data: Scrap[]) => {
 
     const ageRatingNode = await generalDetails.nth(2).locator('span');
     const ageRating = await ageRatingNode.textContent();
+
+    await page.waitForSelector("[data-testid='hero-subnav-bar-series-episode-count']");
+    const episodesNode = await page.locator('[data-testid="hero-subnav-bar-series-episode-count"]');
+    const episodes = await episodesNode.textContent();
 
     const durationNode = generalDetails.nth(3);
     let duration = 'not specified';
@@ -164,11 +145,12 @@ const sendEmail = async (data: Scrap[]) => {
       duration,
       yearsRunning,
       genres: genresData,
+      episodes,
     };
   }
-  const result = checkDiff(oldData, dataArr);
+  const result = await checkDiff(dataArr);
   if (result.length > 0) {
-    writeFileSync('./src/data.json', JSON.stringify([...result, ...oldData]));
+    await insertData(result);
     await sendEmail(result);
   }
   await browser.close();
