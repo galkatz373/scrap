@@ -98,7 +98,7 @@ const sendEmail = async (data: Scrap[]) => {
     const popularityNode = await row.$('.titleColumn .velocity');
     const popularity = await popularityNode.textContent();
 
-    if (imdbRatingNumber > 9.3) {
+    if (imdbRatingNumber > 7.6) {
       dataArr.push({
         popularity,
         title,
