@@ -2,7 +2,7 @@ name: schedule
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 */16 * *'
+    - cron: '0 0 */15 * *'
 
 env:
   EMAIL_USER: ${{ secrets.EMAIL_USER }}
@@ -33,6 +33,8 @@ jobs:
       - name: add changes
         run: git add .
       - name: commit changes
-        run: git commit -m "Automated commit by schedule"
+        run: |
+          git commit -m "Automated commit by schedule" || echo "No changes to commit"
       - name: push changes
-        run: git push origin main -f
+        run: |
+          git push origin main -f || echo "No changes to push"
