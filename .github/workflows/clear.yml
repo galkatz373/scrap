@@ -1,0 +1,31 @@
+name: schedule
+on:
+  workflow_dispatch:
+
+jobs:
+  Run-Schedule:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v2
+      - name: setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'yarn'
+      - name: install dependencies
+        run: yarn install
+      - name: clear
+        run: yarn clear-db
+      - name: git setup user.email
+        run: git config user.email "automated@noreplay.com"
+      - name: git setup user.name
+        run: git config user.name "Automated Commit"
+      - name: add changes
+        run: git add .
+      - name: commit changes
+        run: |
+          git commit -m "Automated commit by schedule" || echo "No changes to commit"
+      - name: push changes
+        run: |
+          git push origin main -f || echo "No changes to push"
