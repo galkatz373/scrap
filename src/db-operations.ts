@@ -8,7 +8,7 @@ export const checkDiff = async (newData: Scrap[]) => {
   const diff = newData.filter(({ title, additional: { episodes } }) => {
     const oldData = shows.find(({ title: oldTitle }) => oldTitle === title);
     if (oldData) {
-      const oldEpisodes = oldData.additional.episodes;
+      const oldEpisodes = oldData.episodes;
       return oldEpisodes !== episodes;
     }
     return true;
